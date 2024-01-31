@@ -56,7 +56,8 @@ func main() {
 				if err != nil {
 					log.Fatalf("could not greet: %v", err)
 				}
-				time.Sleep(time.Second)
+				time.Sleep(100 * time.Millisecond)
+
 				log.Printf("Greeting: %s", r.GetMessage())
 			}
 			conn.Close()

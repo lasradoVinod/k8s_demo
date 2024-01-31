@@ -36,6 +36,22 @@ spec:
           memory: "512Mi"
 ---
 apiVersion: v1
+kind: Pod
+metadata:
+  name: node-client-pod
+  labels:
+    app: node-client
+    lightfoot: enable
+spec:
+  containers:
+    - name: node-client-container
+      image: node-client:v1
+      resources:
+        limits:
+          cpu: "500m"
+          memory: "512Mi"
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: server-service
