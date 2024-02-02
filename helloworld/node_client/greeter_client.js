@@ -38,18 +38,25 @@ function sleep(milliseconds) {
 
 
 function main() {
-  var argv = parseArgs(process.argv.slice(2), {
-    string: 'target'
-  });
-  var target;
+  var argv = parseArgs(process.argv.slice(2))
   if (argv.target) {
     target = argv.target;
   } else {
     target = 'localhost:50051';
   }
+
+  if (!argv.caKey || !argv.sCert || !argv.sKey) {
+    process.exit(1);
+  }
+
+  const credentials = grpc.credentials.createSsl(
+    fs.readFileSync(argv.caKey), 
+    fs.readFileSync(argv.sKey), 
+    fs.readFileSync(argv.sCert)
+  );
+
   while (true) {
-    var client = new hello_proto.Greeter(target,
-                                         grpc.credentials.createInsecure());
+    var client = new hello_proto.Greeter(target, credentials);
     var user;
     if (argv._.length > 0) {
       user = argv._[0];

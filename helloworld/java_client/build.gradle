@@ -28,6 +28,7 @@ dependencies {
     implementation group: 'io.grpc', name: 'grpc-all', version: '1.52.0'
     implementation group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
     implementation group: 'com.google.api', name: 'gax-grpc', version: '2.7.1'
+    implementation group: 'commons-cli', name: 'commons-cli', version: '1.6.0'
     runtimeOnly 'io.netty:netty-tcnative:2.0.45.Final:' + tcnative_classifier
 }
 

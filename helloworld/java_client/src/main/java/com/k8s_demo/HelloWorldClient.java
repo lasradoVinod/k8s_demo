@@ -1,14 +1,19 @@
 package com.k8s_demo;
 
+import org.apache.commons.cli.*;
+
 import io.grpc.examples.helloworld.*;
 import io.grpc.Channel;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
+import io.grpc.TlsChannelCredentials;
+
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.io.File;
 
 /**
  * A simple client that requests a greeting from the {@link HelloWorldServer}.
@@ -46,23 +51,33 @@ public class HelloWorldClient {
      * greeting. The second argument is the target server.
      */
     public static void main(String[] args) throws Exception {
-        String user = "world";
-        // Access a service running on the local machine on port 50051
-        String target = "localhost:50051";
-        // Allow passing in the user and target strings as command line arguments
-        if (args.length > 0) {
-            if ("--help".equals(args[0])) {
-                System.err.println("Usage: [name [target]]");
-                System.err.println("");
-                System.err.println("  name    The name you wish to be greeted by. Defaults to " + user);
-                System.err.println("  target  The server to connect to. Defaults to " + target);
-                System.exit(1);
-            }
-            user = args[0];
-        }
-        if (args.length > 1) {
-            target = args[1];
-        }
+        Options options = new Options();
+        options.addOption(Option.builder("target")
+                .required() // Make it required
+                .hasArg()
+                .desc("url")
+                .build());
+        options.addOption(Option.builder("caKey")
+                .required() // Make it required
+                .hasArg()
+                .desc("Certificating Authority")
+                .build());
+        options.addOption(Option.builder("Cert")
+                .required() // Make it required
+                .hasArg()
+                .desc("Certificating Authority")
+                .build());
+
+        options.addOption(Option.builder("Key")
+                .required() // Make it required
+                .hasArg()
+                .desc("Certificating Authority")
+                .build());
+
+
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd = parser.parse(options, args);
+
 
         // Create a communication channel to the server, known as a Channel. Channels are thread-safe
         // and reusable. It is common to create channels at the beginning of your application and reuse
@@ -70,13 +85,17 @@ public class HelloWorldClient {
         //
         // For the example we use plaintext insecure credentials to avoid needing TLS certificates. To
         // use TLS, use TlsChannelCredentials instead.
+        TlsChannelCredentials.Builder tlsBuilder = TlsChannelCredentials.newBuilder();
+        tlsBuilder.keyManager(new File(cmd.getOptionValue("Cert")), new File(cmd.getOptionValue("Key")));
+        tlsBuilder.trustManager(new File((cmd.getOptionValue("caKey"))));
+
         while (true) {
-            ManagedChannel channel = Grpc.newChannelBuilder(target, InsecureChannelCredentials.create())
+            ManagedChannel channel = Grpc.newChannelBuilder(cmd.getOptionValue("target"), tlsBuilder.build())
                     .build();
             for (int i = 0; i< 100; i++) {
                 try {
                     HelloWorldClient client = new HelloWorldClient(channel);
-                    client.greet(user);
+                    client.greet("user");
                 } finally {
                     // ManagedChannels use resources like threads and TCP connections. To prevent leaking these
                     // resources the channel should be shut down when it will no longer be used. If it may be used

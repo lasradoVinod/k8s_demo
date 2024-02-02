@@ -21,13 +21,19 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"flag"
+	"fmt"
+	"io/ioutil"
 	"log"
-	"time"
+	"os"
 	"strconv"
+	"time"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
+
 	pb "google.golang.org/grpc/examples/helloworld/helloworld"
 )
 
@@ -36,20 +42,67 @@ const (
 )
 
 var (
-	addr = flag.String("addr", "localhost:50051", "the address to connect to")
+	caKey = flag.String("caKey", "", "TLS rootCA key")
+	Cert  = flag.String("Cert", "", "TLS server cert")
+	Key   = flag.String("Key", "", "TLS server key")
+	addr  = flag.String("addr", "localhost:50051", "the address to connect to")
 )
+
+// Function to load TLS credentials from PEM files
+func loadTLSCredentials(certFile, keyFile string) (*tls.Certificate, error) {
+	// Read the certificate file
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		return nil, fmt.Errorf("error loading certificate: %w", err)
+	}
+	return &cert, nil
+}
+
+// Function to load a CA certificate for client authentication (if needed)
+func loadCACert(caFile string) (*x509.CertPool, error) {
+	// Read the CA certificate file
+	caCert, err := ioutil.ReadFile(caFile)
+	if err != nil {
+		return nil, fmt.Errorf("error reading CA certificate: %w", err)
+	}
+
+	// Create a certificate pool
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(caCert) {
+		return nil, fmt.Errorf("failed to add CA certificate to pool")
+	}
+
+	return certPool, nil
+}
 
 func main() {
 	flag.Parse()
 	// Set up a connection to the server.
+	cp, err := loadCACert(*caKey)
+	if err != nil {
+		fmt.Errorf("Error loading ca cert %s", err)
+		os.Exit(1)
+	}
+	creds, err := loadTLSCredentials(*Cert, *Key)
+	if err != nil {
+		fmt.Errorf("Error loading credentials %s", err)
+		os.Exit(1)
+	}
+
+	tlsCfg := tls.Config{}
+	tlsCfg.Certificates = []tls.Certificate{*creds}
+	tlsCfg.RootCAs = cp
+
+	tlsCreds := credentials.NewTLS(&tlsCfg)
+
 	for true {
 		func() {
-			conn, err := grpc.Dial(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			conn, err := grpc.Dial(*addr, grpc.WithTransportCredentials(tlsCreds))
 			if err != nil {
 				log.Fatalf("did not connect: %v", err)
 			}
 			c := pb.NewGreeterClient(conn)
-			ctx, cancel := context.WithTimeout(context.Background(), 300 * time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 			defer cancel()
 			for i := 1; i <= 100; i++ {
 				r, err := c.SayHello(ctx, &pb.HelloRequest{Name: strconv.Itoa(i)})
@@ -61,6 +114,6 @@ func main() {
 				log.Printf("Greeting: %s", r.GetMessage())
 			}
 			conn.Close()
-		} ()
+		}()
 	}
 }

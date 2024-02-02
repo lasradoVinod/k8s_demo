@@ -22,7 +22,10 @@
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
-
+#include "grpc/grpc_security.h"
+#include "grpcpp/security/credentials.h"
+#include "grpcpp/security/tls_credentials_options.h"
+#include <grpcpp/security/tls_certificate_provider.h>
 #include <grpcpp/grpcpp.h>
 
 #ifdef BAZEL_BUILD
@@ -31,6 +34,12 @@
 #include "helloworld.grpc.pb.h"
 #endif
 
+ABSL_FLAG(std::string, caKey, "",
+          "PEM file storing a root certificate");
+ABSL_FLAG(std::string, client_cert, "",
+          "PEM file storing a client certificate");
+ABSL_FLAG(std::string, client_key, "",
+          "PEM file storing a client private key");
 ABSL_FLAG(std::string, target, "localhost:50051", "Server address");
 
 using grpc::Channel;
@@ -76,8 +85,55 @@ class GreeterClient {
   std::unique_ptr<Greeter::Stub> stub_;
 };
 
+std::string ReadFile(const std::string &path) {
+  std::string data;
+  FILE *f = fopen(path.c_str(), "r");
+  if (f == nullptr)
+    PLOG(FATAL) << path;
+  char buf[1024];
+  for (;;) {
+    ssize_t n = fread(buf, 1, sizeof(buf), f);
+    if (n <= 0)
+      break;
+    data.append(buf, n);
+  }
+  if (ferror(f)) {
+    PLOG(FATAL) << "read " << path;
+  }
+  fclose(f);
+  return data;
+}
+
 int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
+
+  std::string rootCaFile = absl::GetFlag(FLAGS_root_ca);
+  std::string clientCertFile = absl::GetFlag(FLAGS_client_cert);
+  std::string clientKeyFile = absl::GetFlag(FLAGS_client_key);
+
+  if (rootCaFile.empty() || clientCertFile.empty() || clientKeyFile.empty()){
+    std::cerr << "Invalid paths" << std::endl;
+    exit(0)
+  }
+
+  const auto root_ca = ReadFile(rootCaFile);
+  const auto client_cert = ReadFile(clientCertFile);
+  const auto client_key = ReadFile(clientKeyFile);
+
+  IdentityKeyCertPair key_cert_pair;
+  key_cert_pair.private_key = ReadFile(kServerKeyPath);
+  key_cert_pair.certificate_chain = ReadFile(kServerCertPath);
+  std::vector<IdentityKeyCertPair> identity_key_cert_pairs;
+  identity_key_cert_pairs.emplace_back(key_cert_pair);
+
+  auto certificate_provider = std::make_shared<StaticDataCertificateProvider>(
+        ReadFile(kCaCertPath), identity_key_cert_pairs)
+      
+
+  grpc::experimental::TlsChannelCredentialsOptions options;
+  options.set_certificate_provider(std::move(key_materials));
+  options.set_certificate_provider(std::move(certificate_provider));
+  auto channel_creds = grpc::experimental::TlsCredentials(options);
   // Instantiate the client. It requires a channel, out of which the actual RPCs
   // are created. This channel models a connection to an endpoint specified by
   // the argument "--target=" which is the only expected argument.
@@ -85,7 +141,7 @@ int main(int argc, char** argv) {
   // We indicate that the channel isn't authenticated (use of
   // InsecureChannelCredentials()).
   GreeterClient greeter(
-      grpc::CreateChannel(target_str, grpc::InsecureChannelCredentials()));
+      grpc::CreateChannel(target_str, channel_creds));
   std::string user("world");
   std::string reply = greeter.SayHello(user);
   std::cout << "Greeter received: " << reply << std::endl;
