@@ -76,34 +76,41 @@ public class HelloWorldClient {
 
 
         CommandLineParser parser = new DefaultParser();
-        CommandLine cmd = parser.parse(options, args);
+        try {
+            CommandLine cmd = parser.parse(options, args);
+            // Create a communication channel to the server, known as a Channel. Channels are thread-safe
+            // and reusable. It is common to create channels at the beginning of your application and reuse
+            // them until the application shuts down.
+            //
+            // For the example we use plaintext insecure credentials to avoid needing TLS certificates. To
+            // use TLS, use TlsChannelCredentials instead.
+            TlsChannelCredentials.Builder tlsBuilder = TlsChannelCredentials.newBuilder();
+            tlsBuilder.keyManager(new File(cmd.getOptionValue("Cert")), new File(cmd.getOptionValue("Key")));
+            tlsBuilder.trustManager(new File((cmd.getOptionValue("caKey"))));
 
 
-        // Create a communication channel to the server, known as a Channel. Channels are thread-safe
-        // and reusable. It is common to create channels at the beginning of your application and reuse
-        // them until the application shuts down.
-        //
-        // For the example we use plaintext insecure credentials to avoid needing TLS certificates. To
-        // use TLS, use TlsChannelCredentials instead.
-        TlsChannelCredentials.Builder tlsBuilder = TlsChannelCredentials.newBuilder();
-        tlsBuilder.keyManager(new File(cmd.getOptionValue("Cert")), new File(cmd.getOptionValue("Key")));
-        tlsBuilder.trustManager(new File((cmd.getOptionValue("caKey"))));
+            while (true) {
+                ManagedChannel channel = Grpc.newChannelBuilder(cmd.getOptionValue("target"), tlsBuilder.build())
+                        .build();
+                HelloWorldClient client = new HelloWorldClient(channel);
 
-        while (true) {
-            ManagedChannel channel = Grpc.newChannelBuilder(cmd.getOptionValue("target"), tlsBuilder.build())
-                    .build();
-            for (int i = 0; i< 100; i++) {
-                try {
-                    HelloWorldClient client = new HelloWorldClient(channel);
-                    client.greet("user");
-                } finally {
-                    // ManagedChannels use resources like threads and TCP connections. To prevent leaking these
-                    // resources the channel should be shut down when it will no longer be used. If it may be used
-                    // again leave it running.
-                    channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+                for (int i = 0; i< 100; i++) {
+                    try {
+                        client.greet("user");
+                    } catch (Exception e){
+                        // ManagedChannels use resources like threads and TCP connections. To prevent leaking these
+                        // resources the channel should be shut down when it will no longer be used. If it may be used
+                        // again leave it running.
+                        System.err.println(e);
+                        break;
+                    }
+                    TimeUnit.SECONDS.sleep(1);
                 }
-                TimeUnit.SECONDS.sleep(1);
+                channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
             }
+        } catch (Exception e) {
+            System.out.println(e);
+            System.exit(1);
         }
     }
 }

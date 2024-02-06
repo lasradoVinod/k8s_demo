@@ -95,12 +95,12 @@ func main() {
 
 	cp, err := loadCACert(*caKey)
 	if err != nil {
-		fmt.Errorf("Error loading ca cert %s", err)
+		fmt.Printf("Error loading ca cert %s", err)
 		os.Exit(1)
 	}
 	creds, err := loadTLSCredentials(*Cert, *Key)
 	if err != nil {
-		fmt.Errorf("Error loading credentials %s", err)
+		fmt.Printf("Error loading credentials %s", err)
 		os.Exit(1)
 	}
 

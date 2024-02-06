@@ -18,6 +18,7 @@
 
 var PROTO_PATH = './helloworld.proto';
 
+var fs = require('fs');
 var parseArgs = require('minimist');
 var grpc = require('@grpc/grpc-js');
 var protoLoader = require('@grpc/proto-loader');
@@ -33,9 +34,11 @@ var hello_proto = grpc.loadPackageDefinition(packageDefinition).helloworld;
 
 function sleep(milliseconds) {
   const start = new Date().getTime();
-  while (new Date().getTime() - start < milliseconds);
+  let now = start;
+  while (now - start < milliseconds) {
+    now = Date.now();
+  }
 }
-
 
 function main() {
   var argv = parseArgs(process.argv.slice(2))
@@ -45,27 +48,29 @@ function main() {
     target = 'localhost:50051';
   }
 
-  if (!argv.caKey || !argv.sCert || !argv.sKey) {
+  if (!argv.caKey || !argv.Cert || !argv.Key) {
+    console.log("No values provided")
     process.exit(1);
   }
 
   const credentials = grpc.credentials.createSsl(
     fs.readFileSync(argv.caKey), 
-    fs.readFileSync(argv.sKey), 
-    fs.readFileSync(argv.sCert)
+    fs.readFileSync(argv.Key), 
+    fs.readFileSync(argv.Cert)
   );
 
   while (true) {
+    console.log (hello_proto)
     var client = new hello_proto.Greeter(target, credentials);
-    var user;
-    if (argv._.length > 0) {
-      user = argv._[0];
-    } else {
-      user = 'world';
-    }
+    console.log(client)
     for (let i = 0; i <100; i++) {
-      client.sayHello({name: user}, function(err, response) {
-        console.log('Greeting:', response.message);
+      console.log(i.toString())
+      client.sayHello({name: i.toString()}, (err, response) => {
+        if (err) {
+          console.log(err)
+        } else {
+          console.log('Greeting:', response.message);
+        }
       });
       sleep(100);
     }
