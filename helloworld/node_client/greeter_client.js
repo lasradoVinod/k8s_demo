@@ -16,9 +16,9 @@
  *
  */
 
-var PROTO_PATH = './helloworld.proto';
-
+var PROTO_PATH = 'helloworld.proto';
 var fs = require('fs');
+
 var parseArgs = require('minimist');
 var grpc = require('@grpc/grpc-js');
 var protoLoader = require('@grpc/proto-loader');
@@ -32,22 +32,16 @@ var packageDefinition = protoLoader.loadSync(
     });
 var hello_proto = grpc.loadPackageDefinition(packageDefinition).helloworld;
 
-function sleep(milliseconds) {
-  const start = new Date().getTime();
-  let now = start;
-  while (now - start < milliseconds) {
-    now = Date.now();
-  }
-}
-
 function main() {
-  var argv = parseArgs(process.argv.slice(2))
+  var argv = parseArgs(process.argv.slice(2), {
+    string: 'target'
+  });
+  var target;
   if (argv.target) {
     target = argv.target;
   } else {
     target = 'localhost:50051';
   }
-
   if (!argv.caKey || !argv.Cert || !argv.Key) {
     console.log("No values provided")
     process.exit(1);
@@ -59,22 +53,34 @@ function main() {
     fs.readFileSync(argv.Cert)
   );
 
-  while (true) {
-    console.log (hello_proto)
-    var client = new hello_proto.Greeter(target, credentials);
-    console.log(client)
-    for (let i = 0; i <100; i++) {
-      console.log(i.toString())
-      client.sayHello({name: i.toString()}, (err, response) => {
+  var client = new hello_proto.Greeter(target,
+                                       credentials);
+
+  const performGrpcCalls = (i, client) => {
+    if (i < 100) {
+      console.log(i.toString());
+      client.sayHello({ name: i.toString() }, (err, response) => {
         if (err) {
-          console.log(err)
+          console.log(err);
         } else {
           console.log('Greeting:', response.message);
         }
+
+        // Recursive call after a delay of 5000 milliseconds (5 seconds)
+        setTimeout(() => {
+          performGrpcCalls(i + 1, client);
+        }, 50);
       });
-      sleep(100);
+    } else {
+      client.close();
+      var newClient = new hello_proto.Greeter(target, credentials);
+    
+      performGrpcCalls(0, newClient);
     }
-  }
+  };
+
+
+  performGrpcCalls(0,client)
 }
 
 main();

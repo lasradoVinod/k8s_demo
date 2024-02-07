@@ -23,6 +23,6 @@ basicConstraints = critical, CA:true
 keyUsage = critical, digitalSignature, cRLSign, keyCertSign
 
 [ alt_names ]
-DNS.1 = ca.kubernetes.default.svc 
+DNS.1 = *.cluster.local
 DNS.2 = localhost
 DNS.3 = 127.0.0.1
