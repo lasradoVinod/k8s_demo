@@ -1,0 +1,3 @@
+[submodule "ebpf-transport-monitoring"]
+	path = ebpf-transport-monitoring
+	url = https://github.com/google/ebpf-transport-monitoring

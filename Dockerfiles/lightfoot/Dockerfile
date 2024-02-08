@@ -12,7 +12,7 @@ RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-11 380 && 
 
 WORKDIR /app/build/ebpf_transport_monitoring
 
-COPY grpc-gcp-tools/ebpf_transport_monitoring /app/build/ebpf_transport_monitoring
+COPY ebpf_transport_monitoring /app/build/ebpf_transport_monitoring
 
 RUN bazel build :lightfoot
 
