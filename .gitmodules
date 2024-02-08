@@ -1,3 +1,0 @@
-[submodule "grpc-gcp-tools"]
-	path = grpc-gcp-tools
-	url = https://github.com/GoogleCloudPlatform/grpc-gcp-tools
