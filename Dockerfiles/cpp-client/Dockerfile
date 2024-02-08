@@ -12,4 +12,6 @@ COPY helloworld/cpp_client/* ./
 
 RUN bazel-6.4.0 build :cpp_client
 
-CMD ["/app/bazel-bin/cpp_client", "-addr", "server-service.default.svc.cluster.local:50051"]
+CMD ["/app/bazel-bin/cpp_client", "--target", "server-service.default.svc.cluster.local:50051", 
+    "--Cert" , "/etc/secret/cpp-client-cert.pem" , "--Key",
+    "/etc/secret/cpp-client-key.pem", "--caKey", "/etc/secret/ca.pem"]
