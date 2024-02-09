@@ -11,6 +11,6 @@ RUN gradle shadowJar --no-daemon
 
 FROM openjdk:11-jre-slim
 # Run the JAR file when the container launches
-CMD ["java", "-jar", "build/libs/helloworld-all.jar","--target", "server-service.default.svc.cluster.local:50051", 
-    "--Cert" , "/etc/secret/java-client-cert.pem" , "--Key",
+CMD ["java", "-jar", "build/libs/helloworld-all.jar","--target", "server-service.default.svc.cluster.local:50051", \
+    "--Cert" , "/etc/secret/java-client-cert.pem" , "--Key", \
     "/etc/secret/java-client-key.pem", "--caKey", "/etc/secret/ca.pem"]

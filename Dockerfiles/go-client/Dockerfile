@@ -7,6 +7,6 @@ COPY helloworld/greeter_client/* ./
 RUN go mod download
 RUN go build -o main .
 
-CMD ["/app/main", "-target", "server-service.default.svc.cluster.local:50051", 
-    "-Cert" , "/etc/secret/go-client-cert.pem" , "-Key",
+CMD ["/app/main", "-target", "server-service.default.svc.cluster.local:50051", \
+    "-Cert" , "/etc/secret/go-client-cert.pem" , "-Key", \
     "/etc/secret/go-client-key.pem", "-caKey", "/etc/secret/ca.pem"]
