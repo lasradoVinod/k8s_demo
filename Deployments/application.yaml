@@ -10,8 +10,12 @@ spec:
     - name: server-container
       image: localhost:5000/server
       volumeMounts:
-      - name: server-secret
+      - name: my-secret-volume
         mountPath: "/etc/my-secret"
+      volumes:
+      - name: my-secret-volume
+        secret:
+          secretName: server-secret
       ports:
         - containerPort: 50051
       resources:
@@ -34,69 +38,85 @@ spec:
     - name: go-client
       image: localhost:5000/go-client
       volumeMounts:
-      - name: go-client-secret
+      - name: my-secret-volume
         mountPath: "/etc/my-secret"
+      volumes:
+      - name: my-secret-volume
+        secret:
+          secretName: go-client-secret
       resources:
         limits:
           cpu: "500m"
           memory: "512Mi"
 ---
-apiVersion: v1
-kind: Pod
-metadata:
-  name: node-client-pod
-  labels:
-    app: node-client
-    lightfoot: enable
-spec:
-  containers:
-    - name: node-client-container
-      image: localhost:5000/node-client
-      volumeMounts:
-      - name: node-client-secret
-        mountPath: "/etc/my-secret"
-      resources:
-        limits:
-          cpu: "500m"
-          memory: "512Mi"
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: java-client-pod
-  labels:
-    app: client
-    lightfoot: enable
-spec:
-  containers:
-    - name: java-client
-      image: localhost:5000/java-client
-      volumeMounts:
-      - name: java-client-secret
-        mountPath: "/etc/my-secret"
-      resources:
-        limits:
-          cpu: "500m"
-          memory: "512Mi"
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: cpp-client-pod
-  labels:
-    app: cpp-client
-    lightfoot: enable
-spec:
-  containers:
-    - name: cpp-client-container
-      image: localhost:5000/cpp-client
-      volumeMounts:
-      - name: cpp-client-secret
-        mountPath: "/etc/my-secret"
-      resources:
-        limits:
-          cpu: "500m"
-          memory: "512Mi"
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: node-client-pod
+#   labels:
+#     app: node-client
+#     lightfoot: enable
+# spec:
+#   containers:
+#     - name: node-client-container
+#       image: localhost:5000/node-client
+#       volumeMounts:
+#       - name: my-secret-volume
+#         mountPath: "/etc/my-secret"
+#       volumes:
+#       - name: my-secret-volume
+#         secret:
+#           secretName: node-client-secret
+#       resources:
+#         limits:
+#           cpu: "500m"
+#           memory: "512Mi"
+# ---
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: java-client-pod
+#   labels:
+#     app: client
+#     lightfoot: enable
+# spec:
+#   containers:
+#     - name: java-client
+#       image: localhost:5000/java-client
+#       volumeMounts:
+#       - name: my-secret-volume
+#         mountPath: "/etc/my-secret"
+#       volumes:
+#       - name: my-secret-volume
+#         secret:
+#           secretName: java-client-secret
+#       resources:
+#         limits:
+#           cpu: "500m"
+#           memory: "512Mi"
+# ---
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: cpp-client-pod
+#   labels:
+#     app: cpp-client
+#     lightfoot: enable
+# spec:
+#   containers:
+#     - name: cpp-client-container
+#       image: localhost:5000/cpp-client
+#       volumeMounts:
+#       - name: my-secret-volume
+#         mountPath: "/etc/my-secret"
+#       volumes:
+#       - name: my-secret-volume
+#         secret:
+#           secretName: cpp-clientn-secret
+#       resources:
+#         limits:
+#           cpu: "500m"
+#           memory: "512Mi"
 ---
 apiVersion: v1
 kind: Service
