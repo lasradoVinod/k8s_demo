@@ -8,7 +8,10 @@ metadata:
 spec:
   containers:
     - name: server-container
-      image: server:v1
+      image: localhost:5000/server
+      volumeMounts:
+      - name: server-secret
+        mountPath: "/etc/my-secret"
       ports:
         - containerPort: 50051
       resources:
@@ -22,14 +25,17 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: client-pod
+  name: go-client-pod
   labels:
     app: client
     lightfoot: enable
 spec:
   containers:
-    - name: client-container
-      image: client:v1
+    - name: go-client
+      image: localhost:5000/go-client
+      volumeMounts:
+      - name: go-client-secret
+        mountPath: "/etc/my-secret"
       resources:
         limits:
           cpu: "500m"
@@ -45,7 +51,48 @@ metadata:
 spec:
   containers:
     - name: node-client-container
-      image: node-client:v1
+      image: localhost:5000/node-client
+      volumeMounts:
+      - name: node-client-secret
+        mountPath: "/etc/my-secret"
+      resources:
+        limits:
+          cpu: "500m"
+          memory: "512Mi"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: java-client-pod
+  labels:
+    app: client
+    lightfoot: enable
+spec:
+  containers:
+    - name: java-client
+      image: localhost:5000/java-client
+      volumeMounts:
+      - name: java-client-secret
+        mountPath: "/etc/my-secret"
+      resources:
+        limits:
+          cpu: "500m"
+          memory: "512Mi"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cpp-client-pod
+  labels:
+    app: cpp-client
+    lightfoot: enable
+spec:
+  containers:
+    - name: cpp-client-container
+      image: localhost:5000/cpp-client
+      volumeMounts:
+      - name: cpp-client-secret
+        mountPath: "/etc/my-secret"
       resources:
         limits:
           cpu: "500m"
