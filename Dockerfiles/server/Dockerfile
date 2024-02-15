@@ -9,6 +9,8 @@ RUN go build -o main .
 
 EXPOSE 50051
 
-CMD ["/app/main", "-target", "server-service.default.svc.cluster.local:50051", \
-    "-Cert" , "/etc/secret/node-client-cert.pem" , "-Key", \
-    "/etc/secret/node-client-key.pem", "-caKey", "/etc/secret/ca.pem"]
+CMD ["/app/main", "-port", "50051", \
+    "-Cert" , "/etc/secret/server-cert.pem" , "-Key", \
+    "/etc/secret/server-key.pem", "-caKey", "/etc/secret/ca.pem"]
+
+#CMD ["tail", "-f", "/dev/null"]

@@ -45,7 +45,7 @@ var (
 	caKey = flag.String("caKey", "", "TLS rootCA key")
 	Cert  = flag.String("Cert", "", "TLS server cert")
 	Key   = flag.String("Key", "", "TLS server key")
-	addr  = flag.String("addr", "localhost:50051", "the address to connect to")
+	addr  = flag.String("target", "localhost:50051", "the address to connect to")
 )
 
 // Function to load TLS credentials from PEM files

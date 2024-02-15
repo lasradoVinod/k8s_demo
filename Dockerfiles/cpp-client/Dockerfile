@@ -1,4 +1,5 @@
-FROM debian:bullseye
+FROM debian:bullseye-slim
+#FROM alpine:latest
 
 RUN apt update && apt upgrade -y && apt install -y apt-transport-https curl gnupg
 RUN curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel-archive-keyring.gpg
@@ -12,6 +13,11 @@ COPY helloworld/cpp_client/* ./
 
 RUN bazel-6.4.0 build :cpp_client
 
-CMD ["/app/bazel-bin/cpp_client", "--target", "server-service.default.svc.cluster.local:50051", \
+
+#WORKDIR /app
+
+#COPY --from=0 /app/bazel-bin/cpp_client ./
+CMD ["./bazel-bin/cpp_client", "--target", "server:50051", \
     "--Cert" , "/etc/secret/cpp-client-cert.pem" , "--Key", \
     "/etc/secret/cpp-client-key.pem", "--caKey", "/etc/secret/ca.pem"]
+#CMD ["tail", "-f", "/dev/null"]

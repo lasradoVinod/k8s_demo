@@ -9,8 +9,12 @@ COPY helloworld/helloworld/helloworld.proto /app/src/main/proto/
 
 RUN gradle shadowJar --no-daemon 
 
-FROM openjdk:11-jre-slim
+FROM openjdk:16-slim
+WORKDIR /app
+COPY --from=0 /app/build/libs/helloworld-all.jar ./
 # Run the JAR file when the container launches
-CMD ["java", "-jar", "build/libs/helloworld-all.jar","--target", "server-service.default.svc.cluster.local:50051", \
-    "--Cert" , "/etc/secret/java-client-cert.pem" , "--Key", \
-    "/etc/secret/java-client-key.pem", "--caKey", "/etc/secret/ca.pem"]
+#CMD ["java", "-jar", "./helloworld-all.jar","--target", "server:50051", \
+#    "--Cert" , "/etc/secret/java-client-cert.pem" , "--Key", \
+#    "/etc/secret/java-client-key.pem", "--caKey", "/etc/secret/ca.pem"]
+
+CMD ["tail", "-f", "/dev/null"]
