@@ -1,9 +1,1 @@
-To run this demo on minkube
-
-1. Start minikube with multiple nodes
-2. First run eval $(minikube docker-env) this will cause docker images built to be stored where minikube can access it.
-3. Build docker files.
-
-bash build.sh does steps 2 and 3
-
-4. kubectl apply -f Deployments/application.yaml 
+Demonstration for ebpf-transport-monitoring
