@@ -33,8 +33,14 @@ func main() {
 			pod := obj.(*v1.Pod)
 			fmt.Println("Pod Added", pod.Name, pod.Status.Phase)
 		},
-		UpdateFunc: func(oldObj, newObj interface{}) { /* handle pod updated */ },
-		DeleteFunc: func(obj interface{}) { /* handle pod deleted */ },
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			pod := obj.(*v1.Pod)
+			fmt.Println("Pod Added", pod.Name, pod.Status.Phase)
+		},
+		DeleteFunc: func(obj interface{}) {
+			pod := obj.(*v1.Pod)
+			fmt.Println("Pod Added", pod.Name, pod.Status.Phase)
+		},
 	})
 	stopCh := make(chan struct{})
 	defer close(stopCh)
