@@ -43,4 +43,30 @@ spec:
           cpu: "500m"
           memory: "512Mi"
   serviceAccountName: pod-viewer
-
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: lightfoot-daemon
+  labels:
+    app: lightfoot-daemon
+spec:
+  selector:
+    matchLabels:
+      app: lightfoot-daemon
+  template:
+    metadata:
+      labels:
+        app: lightfoot-daemon
+    spec:
+      containers:
+      - name: lightfoot
+        image: localhost:5000/lightfoot
+        ports:
+        - containerPort: 12000
+        securityContext:
+          privileged: true
+          capabilities:
+            add: ["SYS_ADMIN", "NET_ADMIN"]
+          allowPrivilegeEscalation: true
+      hostPID: true

@@ -16,4 +16,4 @@ COPY ebpf-transport-monitoring /app/ebpf-transport-monitoring
 
 RUN bazel-6.4.0 build :lightfoot
 
-ENTRYPOINT [ "bash", "lightfoot" ]
+ENTRYPOINT [ "bash", "-c", "./bazel-bin/lightfoot" ]

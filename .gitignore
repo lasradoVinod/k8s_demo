@@ -2,6 +2,7 @@
 *.pem
 *.csr
 *.srl
+*.swp
 helloworld/java_client/.gradle/
 helloworld/java_client/.idea/
 
