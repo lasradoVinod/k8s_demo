@@ -10,9 +10,9 @@ RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-11 380 && 
     update-alternatives --install /usr/bin/llc llc /usr/bin/llc-11 380 && \
     update-alternatives --install /usr/bin/llvm-strip llvm-strip /usr/bin/llvm-strip-11 380
 
-WORKDIR /app/build/ebpf_transport_monitoring
+WORKDIR /app/ebpf-transport-monitoring
 
-COPY ebpf-transport-monitoring /app/build/ebpf_transport_monitoring
+COPY ebpf-transport-monitoring /app/ebpf-transport-monitoring
 
 RUN bazel-6.4.0 build :lightfoot
 
