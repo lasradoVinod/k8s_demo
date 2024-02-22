@@ -147,6 +147,9 @@ func main() {
 		panic(err.Error())
 	}
 
+	controllerInfo.container = make(map[string]PodInfo)
+	controllerInfo.pending = make(map[string]bool)
+	controllerInfo.nodes = make(map[string]string)
 	controllerInfo.wake = make(chan struct{})
 
 	factory := informers.NewSharedInformerFactory(clientset, 2*time.Second)
@@ -165,6 +168,8 @@ func main() {
 			//Do nothing we don't care about deletes for now
 		},
 	})
+
+	go controllerInfo.ContactLightroom()
 	stopCh := make(chan struct{})
 	defer close(stopCh)
 
