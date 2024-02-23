@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -51,6 +52,7 @@ func (c *ControllerInfo) SendUpdate(name string) bool {
 	var ip string
 	var ok bool
 	if ip, ok = c.nodes[c.container[name].nodeName]; !ok {
+		log.Println("Lightfoot instance not found for node ", c.container[name].nodeName)
 		return false
 	}
 	var buffer bytes.Buffer
@@ -65,6 +67,7 @@ func (c *ControllerInfo) SendUpdate(name string) bool {
 	}
 	req.Header.Set("Content-Type", "text/plain")
 	// Create an HTTP client and perform the request
+	log.Println("Sending ", c.container[name].nodeName, ip, " pod ", name)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -79,17 +82,15 @@ func (c *ControllerInfo) SendUpdate(name string) bool {
 	return true
 }
 
-func (c *ControllerInfo) ContactLightroom() {
+func (c *ControllerInfo) ContactLightfoot() {
 	timer := time.NewTimer(10 * time.Second)
-
 	for {
 		select {
 		case <-timer.C:
 		case <-c.wake:
 			c.mu.Lock()
-			for k, _ := range c.pending {
-				status := c.SendUpdate(k)
-				if status {
+			for k := range c.pending {
+				if c.SendUpdate(k) {
 					delete(c.pending, k)
 				}
 			}
@@ -101,20 +102,21 @@ func (c *ControllerInfo) ContactLightroom() {
 func handlePodEvent(e PodEvent, pod *v1.Pod) {
 	switch e {
 	case Add:
-		done := false
+		proceed := false
 		// Add the ip to the lightfoot container corresponding to nodename
 		name := pod.ObjectMeta.GetName()
+		log.Println("Adding ", name)
 		if strings.HasPrefix(name, "lightfoot-daemon") {
 			controllerInfo.nodes[pod.Spec.NodeName] = pod.Status.PodIP
 			break
 		}
 		for k, v := range pod.ObjectMeta.GetLabels() {
 			if k == "lightfoot" && v == "enable" {
-				done = true
+				proceed = true
 				break
 			}
 		}
-		if !done {
+		if !proceed {
 			break
 		}
 		var p PodInfo
@@ -169,7 +171,7 @@ func main() {
 		},
 	})
 
-	go controllerInfo.ContactLightroom()
+	go controllerInfo.ContactLightfoot()
 	stopCh := make(chan struct{})
 	defer close(stopCh)
 
