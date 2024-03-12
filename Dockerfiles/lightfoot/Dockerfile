@@ -1,6 +1,6 @@
-FROM debian:bullseye
+FROM debian:bullseye-slim
 
-RUN apt update && apt upgrade -y && apt install -y apt-transport-https curl gnupg
+RUN apt update && apt install -y apt-transport-https curl gnupg
 RUN curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel-archive-keyring.gpg
 RUN mv bazel-archive-keyring.gpg /usr/share/keyrings
 RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
@@ -15,5 +15,7 @@ WORKDIR /app/ebpf-transport-monitoring
 COPY ebpf-transport-monitoring /app/ebpf-transport-monitoring
 
 RUN bazel-6.4.0 build :lightfoot
+#RUN apt-get install -y vim
 
 ENTRYPOINT [ "bash", "-c", "./bazel-bin/lightfoot" ]
+#CMD ["tail", "-f", "/dev/null"]
