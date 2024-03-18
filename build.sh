@@ -12,6 +12,7 @@ for name in "${names[@]}"; do
     docker tag $name:v1 localhost:5000/$name
     docker push localhost:5000/$name
     openssl genrsa -out cert-config/$name-key.pem 2048
+    openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in cert-config/$name-key.pem -out cert-config/$name-pkcs8-key.pem 
     cp cert-config/cert.cnf /tmp/config.cnf
     echo "DNS.3 = ${name}" >> "/tmp/config.cnf"
     openssl req -new -key cert-config/$name-key.pem -out cert-config/$name.csr -config /tmp/config.cnf
