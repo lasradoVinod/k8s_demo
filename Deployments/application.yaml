@@ -72,29 +72,29 @@ spec:
     secret:
       secretName: node-client-secret
 ---
-apiVersion: v1
-kind: Pod
-metadata:
-  name: java-client-pod
-  labels:
-    app: client
-    lightfoot: enable
-spec:
-  containers:
-    - name: java-client
-      image: localhost:5000/java-client
-      volumeMounts:
-      - name: my-secret-volume
-        mountPath: "/etc/secret"
-      resources:
-        limits:
-          cpu: "500m"
-          memory: "512Mi"
-  volumes:
-  - name: my-secret-volume
-    secret:
-      secretName: java-client-secret
----
+#apiVersion: v1
+#kind: Pod
+#metadata:
+#  name: java-client-pod
+#  labels:
+#    app: client
+#    lightfoot: enable
+#spec:
+#  containers:
+#    - name: java-client
+#      image: localhost:5000/java-client
+#      volumeMounts:
+#      - name: my-secret-volume
+#        mountPath: "/etc/secret"
+#      resources:
+#        limits:
+#          cpu: "500m"
+#          memory: "512Mi"
+#  volumes:
+#  - name: my-secret-volume
+#    secret:
+#      secretName: java-client-secret
+#---
 apiVersion: v1
 kind: Pod
 metadata:

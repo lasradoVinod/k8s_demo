@@ -60,7 +60,7 @@ func (c *ControllerInfo) SendUpdate(name string) bool {
 		buffer.WriteString(str)
 		buffer.WriteString("\n") // Add a newline if you want separation
 	}
-	req, err := http.NewRequest("POST", "https://"+ip+":12000/crio-id", bytes.NewReader(buffer.Bytes()))
+	req, err := http.NewRequest("POST", "http://"+ip+":12000/crio-id", bytes.NewReader(buffer.Bytes()))
 	if err != nil {
 		fmt.Println("Error sending request:", err)
 		return false
@@ -75,26 +75,31 @@ func (c *ControllerInfo) SendUpdate(name string) bool {
 		return false
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 0 || resp.StatusCode > 300 {
+	if resp.StatusCode < 200 || resp.StatusCode > 300 {
 		fmt.Println("Request failed with status:", buffer, resp.Status)
 		return false
 	}
 	return true
 }
 
+func (c *ControllerInfo) ManagePending() {
+	c.mu.Lock()
+	for k := range c.pending {
+		if c.SendUpdate(k) {
+			delete(c.pending, k)
+		}
+	}
+	c.mu.Unlock()
+}
+
 func (c *ControllerInfo) ContactLightfoot() {
-	timer := time.NewTimer(10 * time.Second)
+	timer := time.NewTicker(10 * time.Second)
 	for {
 		select {
-		case <-timer.C:
+		case _ = <-timer.C:
+			c.ManagePending()
 		case <-c.wake:
-			c.mu.Lock()
-			for k := range c.pending {
-				if c.SendUpdate(k) {
-					delete(c.pending, k)
-				}
-			}
-			c.mu.Unlock()
+			c.ManagePending()
 		}
 	}
 }
@@ -126,12 +131,31 @@ func handlePodEvent(e PodEvent, pod *v1.Pod) {
 		}
 		controllerInfo.container[name] = p
 		controllerInfo.mu.Lock()
-		controllerInfo.pending[name] = false
+		controllerInfo.pending[name] = true
 		controllerInfo.mu.Unlock()
 		controllerInfo.wake <- struct{}{}
 	case Update:
+		name := pod.ObjectMeta.GetName()
+		if strings.HasPrefix(name, "lightfoot-daemon") {
+			controllerInfo.nodes[pod.Spec.NodeName] = pod.Status.PodIP
+			break
+		}
 	case Delete:
-		// Handle these cases later revisions
+		name := pod.ObjectMeta.GetName()
+		if strings.HasPrefix(name, "lightfoot-daemon") {
+			// Delete lightfoot-ip 
+			nodeName := pod.Spec.NodeName
+			delete(controllerInfo.nodes, nodeName)
+			// Add all pods on this node to pending
+			controllerInfo.mu.Lock()
+			for k,v := range (controllerInfo.container){
+				if v.nodeName == nodeName {
+					controllerInfo.pending[k] = true
+				}
+			}
+			controllerInfo.mu.Unlock()
+			break
+		}
 	default:
 		break
 	}
