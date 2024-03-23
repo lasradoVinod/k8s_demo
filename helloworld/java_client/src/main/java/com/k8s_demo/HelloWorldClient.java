@@ -1,18 +1,26 @@
 package com.k8s_demo;
 
+import io.grpc.netty.NegotiationType;
 import org.apache.commons.cli.*;
 
 import io.grpc.examples.helloworld.*;
 import io.grpc.Channel;
 import io.grpc.Grpc;
+import io.grpc.netty.GrpcSslContexts;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 import io.grpc.TlsChannelCredentials;
-
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslProvider;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import io.grpc.netty.NettyChannelBuilder;
+
+import javax.net.ssl.SSLContext;
+
 import java.io.File;
 
 /**
@@ -78,23 +86,19 @@ public class HelloWorldClient {
         CommandLineParser parser = new DefaultParser();
         try {
             CommandLine cmd = parser.parse(options, args);
-            // Create a communication channel to the server, known as a Channel. Channels are thread-safe
-            // and reusable. It is common to create channels at the beginning of your application and reuse
-            // them until the application shuts down.
-            //
-            // For the example we use plaintext insecure credentials to avoid needing TLS certificates. To
-            // use TLS, use TlsChannelCredentials instead.
-            TlsChannelCredentials.Builder tlsBuilder = TlsChannelCredentials.newBuilder();
-            tlsBuilder.keyManager(new File(cmd.getOptionValue("Cert")), new File(cmd.getOptionValue("Key")));
-            tlsBuilder.trustManager(new File((cmd.getOptionValue("caKey"))));
-
+            
+            SslContext sslContext = GrpcSslContexts.configure(SslContextBuilder.forClient(),SslProvider.OPENSSL).
+                    keyManager(new File(cmd.getOptionValue("Cert")),new File(cmd.getOptionValue("Key"))).
+                    trustManager(new File((cmd.getOptionValue("caKey")))).build();
+            NettyChannelBuilder builder = NettyChannelBuilder.forTarget(cmd.getOptionValue("target"));
 
             while (true) {
-                ManagedChannel channel = Grpc.newChannelBuilder(cmd.getOptionValue("target"), tlsBuilder.build())
-                        .build();
+
+                ManagedChannel channel =  builder.negotiationType(NegotiationType.TLS).sslContext(sslContext
+                ).build();
                 HelloWorldClient client = new HelloWorldClient(channel);
 
-                for (int i = 0; i< 100; i++) {
+                for (int i = 0; i< 180; i++) {
                     try {
                         client.greet("user");
                     } catch (Exception e){

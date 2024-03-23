@@ -67,7 +67,7 @@ func (c *ControllerInfo) SendUpdate(name string) bool {
 	}
 	req.Header.Set("Content-Type", "text/plain")
 	// Create an HTTP client and perform the request
-	log.Println("Sending ", c.container[name].nodeName, ip, " pod ", name)
+	log.Println("Sending ", c.container[name].nodeName, ip, " pod ", name, buffer)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -149,6 +149,7 @@ func handlePodEvent(e PodEvent, pod *v1.Pod) {
 			// Add all pods on this node to pending
 			controllerInfo.mu.Lock()
 			for k,v := range (controllerInfo.container){
+				fmt.Println(v.nodeName, nodeName)
 				if v.nodeName == nodeName {
 					controllerInfo.pending[k] = true
 				}

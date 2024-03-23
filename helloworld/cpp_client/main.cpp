@@ -143,10 +143,10 @@ int main(int argc, char** argv) {
   while (1) {
   GreeterClient greeter(
       grpc::CreateChannel(target_str, channel_creds));
-      for (int i =0; i< 100; i++){
+      for (int i =0; i< 1800; i++){
         std::string reply = greeter.SayHello(std::to_string(i));
 	std::cout << reply << std::endl;
-        usleep(100000);
+       	usleep(100000);
       }
   }
   return 0;

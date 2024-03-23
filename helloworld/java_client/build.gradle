@@ -30,7 +30,8 @@ dependencies {
     implementation group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
     implementation group: 'com.google.api', name: 'gax-grpc', version: '2.7.1'
     implementation group: 'commons-cli', name: 'commons-cli', version: '1.6.0'
-    runtimeOnly 'io.netty:netty-tcnative:2.0.45.Final:' + tcnative_classifier
+    // https://mvnrepository.com/artifact/io.netty/netty-tcnative-boringssl-static
+    implementation group: 'io.netty', name: 'netty-tcnative-boringssl-static', version: '2.0.48.Final'
 }
 
 sourceSets {
