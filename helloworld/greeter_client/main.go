@@ -104,12 +104,12 @@ func main() {
 			c := pb.NewGreeterClient(conn)
 			ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 			defer cancel()
-			for i := 1; i <= 100; i++ {
+			for i := 1; i <= 180; i++ {
 				r, err := c.SayHello(ctx, &pb.HelloRequest{Name: strconv.Itoa(i)})
 				if err != nil {
 					log.Fatalf("could not greet: %v", err)
 				}
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(time.Second)
 
 				log.Printf("Greeting: %s", r.GetMessage())
 			}

@@ -15,7 +15,6 @@ WORKDIR /app/ebpf-transport-monitoring
 COPY ebpf-transport-monitoring /app/ebpf-transport-monitoring
 
 RUN bazel-6.4.0 build :lightfoot
-#RUN apt-get install -y vim
 
-ENTRYPOINT [ "bash", "-c", "./bazel-bin/lightfoot" ]
+CMD ["./bazel-bin/lightfoot", "--file_log", "--stdin_eof=false", "--log_level=0" ]
 #CMD ["tail", "-f", "/dev/null"]

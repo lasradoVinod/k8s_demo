@@ -57,7 +57,7 @@ function main() {
                                        credentials);
 
   const performGrpcCalls = (i, client) => {
-    if (i < 100) {
+    if (i < 180) {
       console.log(i.toString());
       client.sayHello({ name: i.toString() }, (err, response) => {
         if (err) {
@@ -66,10 +66,9 @@ function main() {
           console.log('Greeting:', response.message);
         }
 
-        // Recursive call after a delay of 5000 milliseconds (5 seconds)
         setTimeout(() => {
           performGrpcCalls(i + 1, client);
-        }, 50);
+        }, 1000);
       });
     } else {
       client.close();
