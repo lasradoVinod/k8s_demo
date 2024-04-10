@@ -1,1 +1,36 @@
-Demonstration for ebpf-transport-monitoring
+# eBPF Transport Monitoring
+
+eBPF transport monitoring offers an innovative approach to observing the performance of TCP and HTTP/2 connections.
+It is fast, has low intrusiveness, is sandboxed, unified, and programmable.
+
+## Kubernetes Deployment
+
+The Kubernetes deployment works as shown in the archtecture diagram.
+
+![Architecture](./k8s_design.png)
+
+## How it works
+
+To deploy 
+
+To enable lightfoot to track applications in a pod you need to add a label `lightfoot:enable` to the pod.
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: go-client-pod
+  labels:
+    app: client
+    lightfoot: enable
+spec:
+...
+```
+## Troubleshooting
+
+## Supports
+* Golang 1.17 and above
+* grpc-go
+* Statically linked OpenSSL or BoringSSL
+* Node js
+* Crio runtime
+* Kernel version 5.3 and above 
