@@ -52,7 +52,7 @@ func (c *ControllerInfo) SendUpdate(name string) bool {
 	var ip string
 	var ok bool
 	if ip, ok = c.nodes[c.container[name].nodeName]; !ok {
-		log.Println("Lightfoot instance not found for node ", c.container[name].nodeName)
+		log.Println("lightfoot instance not found for node ", c.container[name].nodeName)
 		return false
 	}
 	var buffer bytes.Buffer
@@ -104,10 +104,26 @@ func (c *ControllerInfo) ContactLightfoot() {
 	}
 }
 
+func CheckPodLabels(labels map[string]string) bool {
+	for k, v := range labels {
+		if k == "lightfoot" && v == "enable" {
+			return true
+		}
+	}
+	return false
+}
+
+func AddPod(name string, p PodInfo) {
+	controllerInfo.container[name] = p
+	controllerInfo.mu.Lock()
+	controllerInfo.pending[name] = true
+	controllerInfo.mu.Unlock()
+	controllerInfo.wake <- struct{}{}
+}
+
 func handlePodEvent(e PodEvent, pod *v1.Pod) {
 	switch e {
 	case Add:
-		proceed := false
 		// Add the ip to the lightfoot container corresponding to nodename
 		name := pod.ObjectMeta.GetName()
 		log.Println("Adding ", name)
@@ -115,13 +131,7 @@ func handlePodEvent(e PodEvent, pod *v1.Pod) {
 			controllerInfo.nodes[pod.Spec.NodeName] = pod.Status.PodIP
 			break
 		}
-		for k, v := range pod.ObjectMeta.GetLabels() {
-			if k == "lightfoot" && v == "enable" {
-				proceed = true
-				break
-			}
-		}
-		if !proceed {
+		if !CheckPodLabels(pod.ObjectMeta.GetLabels()) {
 			break
 		}
 		var p PodInfo
@@ -129,26 +139,16 @@ func handlePodEvent(e PodEvent, pod *v1.Pod) {
 		for _, containerStatus := range pod.Status.ContainerStatuses {
 			p.containerId = append(p.containerId, strings.TrimPrefix(containerStatus.ContainerID, "cri-o://"))
 		}
-		controllerInfo.container[name] = p
-		controllerInfo.mu.Lock()
-		controllerInfo.pending[name] = true
-		controllerInfo.mu.Unlock()
-		controllerInfo.wake <- struct{}{}
-	case Update:
-		name := pod.ObjectMeta.GetName()
-		if strings.HasPrefix(name, "lightfoot-daemon") {
-			controllerInfo.nodes[pod.Spec.NodeName] = pod.Status.PodIP
-			break
-		}
+		AddPod(name, p)
 	case Delete:
 		name := pod.ObjectMeta.GetName()
 		if strings.HasPrefix(name, "lightfoot-daemon") {
-			// Delete lightfoot-ip 
+			// Delete lightfoot-ip
 			nodeName := pod.Spec.NodeName
 			delete(controllerInfo.nodes, nodeName)
 			// Add all pods on this node to pending
 			controllerInfo.mu.Lock()
-			for k,v := range (controllerInfo.container){
+			for k, v := range controllerInfo.container {
 				fmt.Println(v.nodeName, nodeName)
 				if v.nodeName == nodeName {
 					controllerInfo.pending[k] = true
@@ -189,7 +189,7 @@ func main() {
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			pod := oldObj.(*v1.Pod)
-			handlePodEvent(Update, pod)
+			handlePodEvent(Add, pod)
 		},
 		DeleteFunc: func(obj interface{}) {
 			//Do nothing we don't care about deletes for now

@@ -16,5 +16,8 @@ COPY ebpf-transport-monitoring /app/ebpf-transport-monitoring
 
 RUN bazel-6.4.0 build :lightfoot
 
-CMD ["./bazel-bin/lightfoot", "--file_log", "--stdin_eof=false", "--log_level=0" ]
+FROM alpine:3.16
+COPY --from=0 /app/ebpf-transport-monitoring/bazel-bin/lightfoot /app
+
+CMD ["./app/lightfoot", "--file_log", "--stdin_eof=false", "--log_level=0" ]
 #CMD ["tail", "-f", "/dev/null"]
