@@ -1,0 +1,15 @@
+# Default values for etm.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 1
+log_level: 2
+# Possible options are:
+# 1. cmd for stdout
+# 2. file for logging to file
+# 3. stackdriver
+etm_sink: "cmd"
+# Loction for metrics and logs
+etm_file_sink: "/tmp/"
+# project_id for stackdriver logging
+# please 
+etm_gcp_project: ""

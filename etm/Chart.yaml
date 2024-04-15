@@ -1,0 +1,7 @@
+apiVersion: v2
+name: etm
+description: Deploy ebpf-transport-monitoring to monitor transport library stack
+type: application
+
+version: 0.1.0
+appVersion: "0.1.0"
