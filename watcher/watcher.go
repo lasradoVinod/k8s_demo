@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -53,7 +52,7 @@ func (c *ControllerInfo) SendUpdate(name string) bool {
 	var ip string
 	var ok bool
 	if ip, ok = c.nodes[c.container[name].nodeName]; !ok {
-		log.Println("lightfoot instance not found for node ", c.container[name].nodeName)
+		glog.Info("Lightfoot instance not found for node ", c.container[name].nodeName)
 		return false
 	}
 	var buffer bytes.Buffer
@@ -68,7 +67,7 @@ func (c *ControllerInfo) SendUpdate(name string) bool {
 	}
 	req.Header.Set("Content-Type", "text/plain")
 	// Create an HTTP client and perform the request
-	log.Println("Sending ", c.container[name].nodeName, ip, " pod ", name, buffer)
+	glog.Info("Sending ", c.container[name].nodeName, ip, " pod ", name, buffer)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
