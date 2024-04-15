@@ -1,16 +1,17 @@
-package main
+package watcher
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"sync"
 	"time"
 
-	//	"os"
 	"strings"
 
+	"github.com/golang/glog"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -62,7 +63,7 @@ func (c *ControllerInfo) SendUpdate(name string) bool {
 	}
 	req, err := http.NewRequest("POST", "http://"+ip+":12000/crio-id", bytes.NewReader(buffer.Bytes()))
 	if err != nil {
-		fmt.Println("Error sending request:", err)
+		glog.Error("Error sending request:", err)
 		return false
 	}
 	req.Header.Set("Content-Type", "text/plain")
@@ -71,12 +72,12 @@ func (c *ControllerInfo) SendUpdate(name string) bool {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error sending request:", err)
+		glog.Error("Error sending request:", err)
 		return false
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode > 300 {
-		fmt.Println("Request failed with status:", buffer, resp.Status)
+		glog.Error("Request failed with status:", buffer, resp.Status)
 		return false
 	}
 	return true
@@ -126,7 +127,7 @@ func handlePodEvent(e PodEvent, pod *v1.Pod) {
 	case Add:
 		// Add the ip to the lightfoot container corresponding to nodename
 		name := pod.ObjectMeta.GetName()
-		log.Println("Adding ", name)
+		glog.Info("Adding ", name)
 		if strings.HasPrefix(name, "lightfoot-daemon") {
 			controllerInfo.nodes[pod.Spec.NodeName] = pod.Status.PodIP
 			break
@@ -145,6 +146,7 @@ func handlePodEvent(e PodEvent, pod *v1.Pod) {
 		AddPod(name, p)
 	case Delete:
 		name := pod.ObjectMeta.GetName()
+		glog.Info("Deleting ", name)
 		if strings.HasPrefix(name, "lightfoot-daemon") {
 			// Delete lightfoot-ip
 			nodeName := pod.Spec.NodeName
@@ -173,6 +175,8 @@ func handlePodEvent(e PodEvent, pod *v1.Pod) {
 }
 
 func main() {
+	flag.Parse()
+	fmt.Print("Started")
 	// Create a Kubernetes client using the provided kubeconfig.
 	config, err := rest.InClusterConfig()
 	if err != nil {
