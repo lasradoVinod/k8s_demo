@@ -1,7 +1,16 @@
+# Create namespace for ebpf-trasport-monitoring
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: etm
+  labels:
+    name: etm
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: lightfoot-daemon
+  namespace: etm
   labels:
     app: lightfoot-daemon
 spec:
@@ -10,6 +19,7 @@ spec:
       app: lightfoot-daemon
   template:
     metadata:
+      namespace: etm
       labels:
         app: lightfoot-daemon
     spec:
@@ -39,12 +49,14 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: pod-viewer
+  namespace: etm
 ---
 # Creating a role for the service account
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: pod-viewer-role
+  namespace: etm
 rules:
 - apiGroups: [""] # "" represents the core API group
   resources: ["pods"]
@@ -55,6 +67,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: pod-viewer-binding
+  namespace: etm
 subjects:
   - kind: ServiceAccount
     name: pod-viewer
@@ -68,6 +81,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: watcher-pod
+  namespace: etm
   labels:
     app: watcher
 spec:
