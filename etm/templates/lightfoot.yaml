@@ -59,7 +59,7 @@ spec:
       {{- if eq .Values.etm_sink "gcp" }}
       - name: my-secret-volume
         secret:
-          secretName: {{- required "Secret is required" .Values.etm_json_secret }}
+          secretName: {{ required "Secret is required" .Values.etm_json_secret }} 
       {{ end }}
       hostPID: true
 ---
@@ -106,7 +106,7 @@ spec:
     - name: watcher
       image: localhost:5000/watcher
       args: 
-        "--logtostderr= {{.Values.log_level}}"
+      - "--stderrthreshold={{.Values.log_level}}"
       resources:
         limits:
           cpu: "500m"
