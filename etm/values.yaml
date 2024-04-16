@@ -2,14 +2,21 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 replicaCount: 1
+# 0 is INFO
+# 1 is WARN
+# 2 is ERROR
 log_level: 2
 # Possible options are:
 # 1. cmd for stdout
 # 2. file for logging to file
-# 3. stackdriver
+# 3. gcp
 etm_sink: "cmd"
 # Loction for metrics and logs
-etm_file_sink: "/tmp/"
+etm_file_sink: null
 # project_id for stackdriver logging
-# please 
-etm_gcp_project: ""
+etm_gcp_project: null
+# This is the gcp json service account that should be used.
+# It should be installed in k8s as a part of a secret.
+# Provice the secret name here.
+# The secret should contain a file with name gcp_creds.json
+etm_json_secret: null

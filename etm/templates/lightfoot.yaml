@@ -26,6 +26,18 @@ spec:
       containers:
       - name: lightfoot
         image: localhost:5000/lightfoot
+        args:
+        - "--log_level={{.Values.log_level}}"
+        {{- if eq .Values.etm_sink "file" }}
+        - "--file_log"
+          {{- if .Values.etm_file_sink }}
+        - "--file_log_location={{ .Values.etm_file_sink }}"
+          {{- end }}
+        {{- else if eq .Values.etm_sink "gcp"}}
+        - "--opencensus_log"
+        - "--gcp_project={{- required "Project id is required" .Values.etm_gcp_project }}"
+        - "--gcp_creds=/etc/secret/gcp_creds.json"
+        {{ end }}
         ports:
         - containerPort: 12000
         securityContext:
@@ -37,11 +49,18 @@ spec:
         - mountPath: /host
           name: host-root
           readOnly: true
+        - name: my-secret-volume
+          mountPath: "/etc/secret"
       volumes:
       - hostPath:
           path: /
           type: Directory
         name: host-root
+      {{- if eq .Values.etm_sink "gcp" }}
+      - name: my-secret-volume
+        secret:
+          secretName: {{- required "Secret is required" .Values.etm_json_secret }}
+      {{ end }}
       hostPID: true
 ---
 # Creating a service account for the watcher
@@ -86,6 +105,8 @@ spec:
   containers:
     - name: watcher
       image: localhost:5000/watcher
+      args: 
+        "--logtostderr= {{.Values.log_level}}"
       resources:
         limits:
           cpu: "500m"
