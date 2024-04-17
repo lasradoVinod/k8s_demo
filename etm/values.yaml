@@ -16,5 +16,5 @@ etm_file_sink: null
 # project_id for stackdriver logging
 etm_gcp_project: null
 # This is the gcp json service account that should be used.
-# Provide name of file here. Make sure to 
+# Use set-file to provide the path to service account json 
 etm_json_secret: null

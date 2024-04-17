@@ -6,15 +6,17 @@ metadata:
   labels:
     name: etm
 ---
+{{- if eq .Values.etm_sink "gcp"}}
 apiVersion: v1
 kind: Secret
 metadata:
-  name: my-secret
+  name: gcp-secret
   namespace: etm
 type: Opaque
 data:
-  {{ base .Values.etm_json_secret }}: {{  .Files.Get .Values.etm_json_secret | b64enc }} 
+  gcp_creds.json: {{  .Values.etm_json_secret | b64enc }} 
 ---
+{{ end }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -45,7 +47,7 @@ spec:
         {{- else if eq .Values.etm_sink "gcp"}}
         - "--opencensus_log"
         - "--gcp_project={{- required "Project id is required" .Values.etm_gcp_project }}"
-        - "--gcp_creds=/etc/secret/{{- base .Values.etm_json_secret -}}"
+        - "--gcp_creds=/etc/secret/gcp_creds.json"
         {{ end }}
         ports:
         - containerPort: 12000
@@ -58,8 +60,10 @@ spec:
         - mountPath: /host
           name: host-root
           readOnly: true
+        {{- if eq .Values.etm_sink "gcp"}}
         - name: my-secret-volume
           mountPath: "/etc/secret"
+        {{ end }}
       volumes:
       - hostPath:
           path: /
@@ -68,7 +72,7 @@ spec:
       {{- if eq .Values.etm_sink "gcp" }}
       - name: my-secret-volume
         secret:
-          secretName: {{ required "Secret is required" .Values.etm_json_secret }} 
+          secretName: gcp-secret 
       {{ end }}
       hostPID: true
 ---
