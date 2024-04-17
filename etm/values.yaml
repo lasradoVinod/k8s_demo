@@ -1,0 +1,20 @@
+# Default values for etm.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 1
+# 0 is INFO
+# 1 is WARN
+# 2 is ERROR
+log_level: 2
+# Possible options are:
+# 1. cmd for stdout
+# 2. file for logging to file
+# 3. gcp
+etm_sink: "cmd"
+# Loction for metrics and logs
+etm_file_sink: null
+# project_id for stackdriver logging
+etm_gcp_project: null
+# This is the gcp json service account that should be used.
+# Use set-file to provide the path to service account json 
+etm_json_secret: null
